@@ -17,12 +17,13 @@ class SharedPointer {
    ~SharedPointer()
   {
   if(ref_count_ != nullptr)  
-   {  if(*ref_count_ == 0)
+   {  
+   if(*ref_count_ == 0)
     {
-    if(type_ == kSharedPointerType::kArray) 
+   if(type_ == kSharedPointerType::kArray) 
        delete[] holder_;
     else  
-       delete   (T*)holder_; 
+       delete   holder_;
     delete  ref_count_;
     ref_count_ = nullptr;
     holder_ = nullptr;
@@ -35,6 +36,7 @@ class SharedPointer {
    {
    holder_ = source.holder_;
    ref_count_ = source.ref_count_;
+   type_ = source.type_;
    if(source.ref_count_ != nullptr)
        *source.ref_count_ = *source.ref_count_ + 1;
    };
@@ -49,11 +51,13 @@ class SharedPointer {
         if(type_ == kSharedPointerType::kArray) 
            delete[] holder_;
         else  
-           delete   (T*)holder_; 
+           delete   holder_;
+       delete  ref_count_;     
       } 
    }  
    this->holder_ = source.holder_;
    this->ref_count_ = source.ref_count_;
+   this->type_ = source.type_;
    *this->ref_count_ = *this->ref_count_ + 1;
    return *this;
    }
@@ -68,11 +72,12 @@ class SharedPointer {
   unsigned int UseCount() const {
     return (ref_count_ != nullptr) ? *ref_count_ : 0;
   }
-
+bool b_newed=false;
  private:
   T* holder_ = nullptr;
   kSharedPointerType type_ = kSharedPointerType::kObject;
   unsigned int* ref_count_ = nullptr;
+ 
 };
 
 // non-member helper function declarations
