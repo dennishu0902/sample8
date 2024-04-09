@@ -24,7 +24,7 @@ int main() {
     #endif 
     auto c_str = g->ToString();
     std::cout << c_str.Get() << std::endl;
-    auto res = SubString(g,2, 4);
+    auto res = SubString(g,3, 12);
     auto res_str = res->ToString();
     std::cout << res_str.Get() << std::endl; 
   //  res = new Cord("po");

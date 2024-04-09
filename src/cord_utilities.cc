@@ -27,17 +27,17 @@ SharedPointer<Cord> CreateNewCords(SharedPointer<Cord> curr_cord,
       delete[] p_ch1;
       return left;
 }
+#if 0
 SharedPointer<Cord> SubString(SharedPointer<Cord> curr_cord,
                                unsigned int lower_idx,
                                unsigned int upper_idx)
 {
   if(curr_cord.Get()->Length() ==0 || upper_idx > curr_cord.Get()->Length() || lower_idx >= upper_idx) 
      throw out_of_range("Out of range");
-  if(curr_cord.Get()->Left().Get()==nullptr)
+  if(lower_idx == 0 && upper_idx== curr_cord.Get()->Length())
+        return curr_cord;   
+  else if(curr_cord.Get()->Left().Get()==nullptr)
   { // leaf
-      if(lower_idx == 0 && upper_idx== curr_cord.Get()->Length())
-        return curr_cord;
-      else
         return CreateNewCords(curr_cord,lower_idx, upper_idx);
   }
   else
@@ -51,15 +51,57 @@ SharedPointer<Cord> SubString(SharedPointer<Cord> curr_cord,
        {
         SharedPointer<Cord> left = SubString(curr_cord.Get()->Left(),lower_idx, l_len);
         SharedPointer<Cord> right= SubString(curr_cord.Get()->Right(),0, upper_idx - l_len); 
-        if((left.Get() == curr_cord.Get()->Left().Get())  && (right.Get() == curr_cord.Get()->Right().Get()))
-        {
-           return curr_cord;
-        }
-       else
-        {  
-         SharedPointer<Cord> result= ConcatCords(left, right);
-         return result;
-        } 
-       } 
+        return ConcatCords(left, right);
+      } 
   }
 }
+#else
+void push_to_stack(std::stack<SharedPointer<Cord>> &s_stack,std::stack<unsigned int>  &i_stack,
+                   SharedPointer<Cord> curr_cord,unsigned int lower_idx,unsigned int upper_idx)
+{
+  s_stack.push(curr_cord);
+  i_stack.push(lower_idx);
+  i_stack.push(upper_idx);
+                   }
+SharedPointer<Cord> SubString(SharedPointer<Cord> curr_cord,
+                               unsigned int lower_idx,
+                               unsigned int upper_idx)
+{
+  if(curr_cord.Get()->Length() ==0 || upper_idx > curr_cord.Get()->Length() || lower_idx >= upper_idx) 
+     throw out_of_range("Out of range");
+  std::stack<SharedPointer<Cord>>   s_stack,a_stack;
+  std::stack<unsigned int>          i_stack;
+  unsigned int tlower_idx=0,tupper_idx=0;
+  SharedPointer<Cord> root_cord,left_cord,right_cord;
+  push_to_stack(s_stack,i_stack,curr_cord,lower_idx,upper_idx);
+  while(!s_stack.empty())
+  {
+  root_cord = s_stack.top(); s_stack.pop();
+  tupper_idx = i_stack.top();i_stack.pop();
+  tlower_idx = i_stack.top();i_stack.pop();
+  if(tlower_idx == 0 && tupper_idx== root_cord.Get()->Length()) a_stack.push(root_cord);
+  else if(root_cord.Get()->Left().Get()==nullptr)
+   a_stack.push(CreateNewCords(root_cord,tlower_idx, tupper_idx));
+  else
+  {
+    unsigned int l_len = root_cord.Get()->Left().Get()->Length();
+    if(tlower_idx >= l_len) 
+        push_to_stack(s_stack,i_stack,root_cord.Get()->Right(),tlower_idx - l_len,tupper_idx - l_len);
+    else if (tupper_idx <=  l_len)  
+       push_to_stack(s_stack,i_stack,root_cord.Get()->Left(),tlower_idx,tupper_idx);
+    else
+   {
+       push_to_stack(s_stack,i_stack,root_cord.Get()->Right(),0,tupper_idx - l_len);
+       push_to_stack(s_stack,i_stack,root_cord.Get()->Left(),tlower_idx,l_len);
+   }
+  }
+ }
+  left_cord = a_stack.top();a_stack.pop(); 
+  while(!a_stack.empty())
+  {
+    right_cord = a_stack.top();a_stack.pop(); 
+    left_cord = ConcatCords(right_cord, left_cord);   
+  }
+  return left_cord;
+}
+#endif
